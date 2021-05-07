@@ -1,0 +1,61 @@
+---
+title: "stat425 final project"
+author: 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exploratory Data Analysis
+
+
+```{r}
+#Import the original data set
+library(readr)
+Fat_Supply_Quantity_Data <- read_csv("Fat_Supply_Quantity_Data.csv")
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+
+#Remove meaningless column ,as well as columns with too many 0 values (which means that this kind of food is not supplied in most of countries)
+modified_data = Fat_Supply_Quantity_Data %>%
+  select(-c(`Aquatic Products, Other`,`Unit (all except Population)`,`Alcoholic Beverages`,`Sugar Crops`,`Sugar & Sweeteners`)) %>%
+  drop_na(Deaths)
+
+
+#Convert the variable `Undernourished` to be numerical
+modified_data$Undernourished[modified_data$Undernourished == "<2.5"] = 2.5
+modified_data$Undernourished = as.numeric(modified_data$Undernourished)
+#Replace NA values with 0s
+modified_data[is.na(modified_data)] = 0
+str(modified_data)
+
+```
+
+
+```{r}
+par(mfrow = c(1,2))
+#Plot the histogram of the response
+hist(modified_data$Deaths,xlab = "Death Rate",main = "Histogram of Death Rates",breaks = 50)
+
+#Plot of the histogram of the response after applying the log transformation
+hist(log(modified_data$Deaths),xlab = "Death Rate",main = "Histogram of Death Rates",breaks = 50)
+
+```
+
+```{r}
+#Create a graphical display of the correlation matrix of our data
+library(corrplot)
+m = cor(modified_data[,-1])
+par(cex=0.65)
+corrplot(m,method="circle")
+```
+
+## Methodology
+
+
+
