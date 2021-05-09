@@ -162,13 +162,17 @@ Bic=n*log(rs$rss/n) + msize*log(n)
 plot(msize,Aic,xlab="No. of Parameters",ylab="AIC")
 plot(msize,Bic,xlab="No. of Parameters",ylab="BIC")
 
+
 ```
-
-
-
 ```{r}
-#We would reject the normality assumption, in order to reduce non-normality, we would like to apply box-cox transformation.
-dim(modified_data)
+rs$which[which.min(Aic),]
+```
+```{r}
+select.var = colnames(rs$which)[rs$which[which.min(Aic),]]
+select.var = select.var[-1]
+select.var
+myfit = lm(Deaths~.,data = modified_data[,c("Animal Products","Animal fats","Miscellaneous","Stimulants","Vegetal Products","Vegetable Oils","Obesity","Deaths")])
+summary(myfit)
 ```
 
 # 3.2 Model Prediction
