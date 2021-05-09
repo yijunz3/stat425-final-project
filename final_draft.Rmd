@@ -36,7 +36,14 @@ modified_data$`Sugar & Sweeteners` = ifelse(modified_data$`Sugar & Sweeteners` =
 #Replace NA values with 0s
 modified_data[is.na(modified_data)] = 0
 str(modified_data)
+#Let the row names of data to be country names
+names = modified_data$Country
+modified_data = modified_data[,-1]
+rownames(modified_data) <- names
+```
 
+```{r}
+View(modified_data)
 ```
 
 
@@ -60,5 +67,18 @@ corrplot(m,method="circle")
 
 ## Methodology
 
+# 3.1 Variable Selection
+
+# 3.2 Model Development
+```{r}
+#Simple linear regression model
+mod_linear <- lm(Deaths~.,data = modified_data)
+summary(mod_linear)
+```
+
+```{r}
+#From the summary table, we are able to observe that there exist colliearity between variables `Confirmed`,`Active` and the response, we would remove them from the data set.
+
+```
 
 
