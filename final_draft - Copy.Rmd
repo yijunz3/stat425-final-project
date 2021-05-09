@@ -1,0 +1,182 @@
+---
+title: "stat425 final project"
+author: 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exploratory Data Analysis
+
+
+```{r}
+#Import the original data set
+library(readr)
+Fat_Supply_Quantity_Data <- read_csv("Fat_Supply_Quantity_Data.csv")
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+
+#Remove meaningless column ,as well as columns with too many 0 values (which means that this kind of food is not supplied in most of countries)
+modified_data = Fat_Supply_Quantity_Data %>%
+  select(-c(`Aquatic Products, Other`,`Unit (all except Population)`,`Alcoholic Beverages`)) %>%
+  drop_na(Deaths)
+
+
+#Convert the variable `Undernourished` to be numerical
+modified_data$Undernourished[modified_data$Undernourished == "<2.5"] = 2.5
+modified_data$Undernourished = as.numeric(modified_data$Undernourished)
+#Convert the variables `Sugar Crops`,`Sugar & Sweeteners` to be categorical
+modified_data$`Sugar Crops` = ifelse(modified_data$`Sugar Crops` == 0,"Not Supplied","Supplied")
+modified_data$`Sugar & Sweeteners` = ifelse(modified_data$`Sugar & Sweeteners` == 0,"Not Supplied","Supplied")
+#Replace NA values with 0s
+modified_data[is.na(modified_data)] = 0
+str(modified_data)
+
+```
+
+
+```{r}
+par(mfrow = c(1,2))
+#Plot the histogram of the response
+hist(modified_data$Deaths,xlab = "Death Rate",main = "Histogram of Death Rates",breaks = 50)
+
+#Plot of the histogram of the response after applying the log transformation
+hist(log(modified_data$Deaths),xlab = "Death Rate",main = "Histogram of Death Rates",breaks = 50)
+
+```
+
+```{r}
+#Create a graphical display of the correlation matrix of our data
+library(corrplot)
+m = cor(modified_data[,-c(1,17,18)])
+par(cex=0.65)
+corrplot(m,method="circle")
+```
+
+# TODO: ADD ADDITIONAL CODE FROM VARIABLE SELECTION
+
+## Methodology
+
+### Section 3.1
+
+```{r}
+# split data into training and testing sets (90 / 10)
+
+data = Fat_Supply_Quantity_Data[-1 * which(Fat_Supply_Quantity_Data$Country == "Korea, South"),]
+
+n = nrow(Fat_Supply_Quantity_Data)
+train_indices = sample.int(n, floor(0.9 * n), replace = FALSE)
+
+train_data = Fat_Supply_Quantity_Data[train_indices,]
+test_data = Fat_Supply_Quantity_Data[-1 * train_indices,]
+```
+
+```{r}
+# cleaning the data
+
+simple_data = train_data
+simple_data = simple_data[, !(colnames(simple_data) %in% c("Country", "Confirmed", "Recovered", "Active", "Unit (all except Population)", "Vegetal Products"))]
+
+# reformatting the undernourished variable
+simple_data[is.na(simple_data$Undernourished), 24] = "0"
+simple_data[simple_data$Undernourished == "<2.5", 24] = "0"
+simple_data$Undernourished = as.numeric(simple_data$Undernourished)
+
+simple_data[is.na(simple_data)] = 0
+
+# updating obesity
+simple_data$Obesity = as.numeric(simple_data$Obesity)
+
+# normalizing the needed variables
+for (col in colnames(simple_data)) {
+
+  if (col != "Deaths") {
+    simple_data[[col]] = (simple_data[[col]] - mean(simple_data[[col]])) / sd(simple_data[[col]])
+  }
+}
+
+cleaned_data_train = simple_data
+```
+
+
+```{r}
+# fitting the simple model
+simple_model = lm(Deaths ~ ., data = cleaned_data_train)
+summary(simple_model)
+```
+
+```{r}
+# checking for outliers
+jack = rstudent(simple_model)
+
+n = nrow(cleaned_data)
+qt(.05/(2 * n), 44)
+
+sort(abs(jack), decreasing=TRUE)[1:5] 
+```
+
+
+
+```{r}
+plot(simple_model, which = 1)
+```
+
+```{r}
+bptest(simple_model)
+```
+
+```{r}
+plot(simple_model, which = 2)
+```
+
+```{r}
+shapiro.test(residuals(simple_model))
+```
+
+```{r}
+# cleaning the testing data
+# cleaning the data
+
+simple_data = test_data
+simple_data = simple_data[, !(colnames(simple_data) %in% c("Country", "Confirmed", "Recovered", "Active", "Unit (all except Population)", "Vegetal Products"))]
+
+# reformatting the undernourished variable
+simple_data[is.na(simple_data$Undernourished), 24] = "0"
+simple_data[simple_data$Undernourished == "<2.5", 24] = "0"
+simple_data$Undernourished = as.numeric(simple_data$Undernourished)
+
+simple_data[is.na(simple_data)] = 0
+
+# updating obesity
+simple_data$Obesity = as.numeric(simple_data$Obesity)
+
+# normalizing the needed variables
+for (col in colnames(simple_data)) {
+
+  if (col != "Deaths") {
+    simple_data[[col]] = (simple_data[[col]] - mean(simple_data[[col]])) / sd(simple_data[[col]])
+  }
+}
+
+cleaned_data_test = simple_data
+```
+
+```{r}
+# predicting with our test data
+pred_data = predict(simple_model, cleaned_data_test)
+
+actual_data = cleaned_data_test$Deaths
+
+err = (sum((actual_data - pred_data)^2))^0.5
+err
+```
+
+```{r}
+
+```
+
