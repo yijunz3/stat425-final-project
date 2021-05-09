@@ -8,14 +8,23 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Exploratory Data Analysis
-
+## Introduction
 
 ```{r}
 #Import the original data set
 library(readr)
+library(lmtest)
 Fat_Supply_Quantity_Data <- read_csv("Fat_Supply_Quantity_Data.csv")
+str(Fat_Supply_Quantity_Data)
 ```
+
+```{r}
+colnames(Fat_Supply_Quantity_Data)
+```
+
+## Exploratory Data Analysis
+
+# 2.1 Data cleaning
 
 ```{r}
 library(dplyr)
@@ -31,21 +40,15 @@ modified_data = Fat_Supply_Quantity_Data %>%
 modified_data$Undernourished[modified_data$Undernourished == "<2.5"] = 2.5
 modified_data$Undernourished = as.numeric(modified_data$Undernourished)
 #Convert the variables `Sugar Crops`,`Sugar & Sweeteners` to be categorical
-modified_data$`Sugar Crops` = ifelse(modified_data$`Sugar Crops` == 0,"Not Supplied","Supplied")
-modified_data$`Sugar & Sweeteners` = ifelse(modified_data$`Sugar & Sweeteners` == 0,"Not Supplied","Supplied")
+modified_data$`Sugar Crops` = factor(ifelse(modified_data$`Sugar Crops` == 0,"Not Supplied","Supplied"))
+modified_data$`Sugar & Sweeteners` = factor(ifelse(modified_data$`Sugar & Sweeteners` == 0,"Not Supplied","Supplied"))
+
 #Replace NA values with 0s
 modified_data[is.na(modified_data)] = 0
 str(modified_data)
-#Let the row names of data to be country names
-names = modified_data$Country
-modified_data = modified_data[,-1]
-rownames(modified_data) <- names
-```
 
-```{r}
-View(modified_data)
 ```
-
+# 2.2 Data Exploration
 
 ```{r}
 par(mfrow = c(1,2))
@@ -58,7 +61,7 @@ hist(log(modified_data$Deaths),xlab = "Death Rate",main = "Histogram of Death Ra
 ```
 
 ```{r}
-#Create a graphical display of the correlation matrix of our data
+#Create a graphical display of the correlation matrix of data
 library(corrplot)
 m = cor(modified_data[,-c(1,17,18)])
 par(cex=0.65)
@@ -77,7 +80,69 @@ summary(mod_linear)
 ```
 
 ```{r}
-#From the summary table, we are able to observe that there exist colliearity between variables `Confirmed`,`Active` and the response, we would remove them from the data set.
+#From the summary table, we are able to observe that there exist colliearity between variables `Confirmed`,`Active`,`Recovered` and the response, we would remove them from the data set.
+
+modified_data = modified_data[,!(colnames(modified_data) %in% c("Confirmed", "Recovered", "Active"))]
+View(modified_data)
+
+```
+
+```{r}
+# split data into training and testing sets (90 / 10)
+
+modified_data = modified_data[-1 * which(modified_data$Country == "Korea, South"),]
+View(modified_data)
+
+n = nrow(modified_data)
+train_indices = sample.int(n, floor(0.9 * n), replace = FALSE)
+
+train_data = modified_data[train_indices,]
+test_data = modified_data[-1 * train_indices,]
+
+#Let the row names of data to be country names
+names = modified_data$Country
+modified_data = modified_data[,-1]
+rownames(modified_data) <- names
+
+```
+
+```{r}
+#Refit the linear model and check diagonistics
+mod_linear <- lm(Deaths~.,data = modified_data)
+summary(mod_linear)
+```
+
+```{r}
+# checking for outliers
+jack = rstudent(mod_linear)
+
+n = nrow(modified_data)
+qt(.05/(2 * n), 44)
+
+sort(abs(jack), decreasing=TRUE)[1:5] 
+
+```
+```{r}
+#Check for residual constant variance
+plot(mod_linear,which = 1)
+bptest(mod_linear)
+
+#The p-value is slightly greater than 0.05, but still a weak support.
+```
+```{r}
+#Check normality assumption
+plot(mod_linear, which = 2)
+shapiro.test(residuals(mod_linear))
+#We would reject the normality assumption
+```
+```{r}
+# predicting with our test data
+pred_data = predict(mod_linear, test_data)
+
+actual_data = test_data$Deaths
+
+err = (sum((actual_data - pred_data)^2))^0.5
+err
 
 ```
 
