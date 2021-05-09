@@ -109,42 +109,7 @@ test_data = modified_data[-1 * train_indices,]
 
 ```
 
-```{r}
-#Refit the linear model and check diagonistics
-mod_linear <- lm(Deaths~.,data = modified_data)
-summary(mod_linear)
-```
 
-```{r}
-# checking for outliers
-jack = rstudent(mod_linear)
-
-n = nrow(modified_data)
-qt(.05/(2 * n), 134)
-
-sort(abs(jack), decreasing=TRUE)[1:5] 
-
-```
-
-```{r}
-#Check for residual constant variance
-plot(mod_linear,which = 1)
-bptest(mod_linear)
-
-#The p-value is slightly greater than 0.05, but still a weak support. Thus,we try to apply a variance stabilizing transformation.
-mod_linear_1 <- lm(log(Deaths)~.,data = modified_data)
-summary(mod_linear_1)
-
-
-
-```
-```{r}
-#Do the assumption check again
-bptest(mod_linear_1)
-par(mfrow=c(2,2))
-shapiro.test(resid(mod_linear_1))
-plot(mod_linear_1,which=c(1,2))
-```
 # Variable Selection
 
 ```{r}
@@ -174,12 +139,53 @@ select.var
 myfit = lm(Deaths~.,data = modified_data[,c("Animal Products","Animal fats","Miscellaneous","Stimulants","Vegetal Products","Vegetable Oils","Obesity","Deaths")])
 summary(myfit)
 ```
+```{r}
+# checking for outliers
+jack = rstudent(myfit)
+
+n = nrow(modified_data)
+qt(.05/(2 * n), 134)
+
+sort(abs(jack), decreasing=TRUE)[1:5] 
+
+
+```
+
+```{r}
+#Do the model diagonistic
+bptest(myfit)
+par(mfrow=c(2,2))
+shapiro.test(resid(myfit))
+plot(myfit,which=c(1,2))
+
+```
+
+```{r}
+#The p-value is less than 0.05. Thus,we try to apply a variance stabilizing transformation.
+myfit_1 <- lm(log(Deaths)~.,data = modified_data[,c("Animal Products","Animal fats","Miscellaneous","Stimulants","Vegetal Products","Vegetable Oils","Obesity","Deaths")])
+summary(myfit_1)
+```
+```{r}
+#Do the assumption check again
+bptest(myfit_1)
+par(mfrow=c(2,2))
+shapiro.test(resid(myfit_1))
+plot(myfit_1,which=c(1,2))
+
+```
+
+```{r}
+#Todo: solve the non-normality problem
+
+```
+
+
 
 # 3.2 Model Prediction
 
 ```{r}
 # predicting with our test data
-pred_data = predict(mod_linear, test_data)
+pred_data = predict(myfit, test_data)
 
 actual_data = test_data$Deaths
 
