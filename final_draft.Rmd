@@ -195,8 +195,17 @@ err
 ```
 
 # 3.3 Other Models
+
 ```{r}
 #Since our model has both numerical and categorical variables, we would like to construct a mixed effect model.
 library(lme4)
 ```
 
+# 4. Conclusion
+- The model we choose:
+
+- Intepret the model:
+
+- How does the model help us to answer the main question:
+
+- Unsolved problems:
