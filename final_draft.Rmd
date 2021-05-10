@@ -175,9 +175,7 @@ plot(myfit_1,which=c(1,2))
 ```
 
 ```{r}
-
 #Since log(Deaths) is negative, we can't directly apply box-cox transformation. If anyone have any idea to correct the non-normality, feel free to write your code here.
-
 ```
 
 
@@ -212,8 +210,8 @@ lrtstat = as.numeric(2*(logLik(mod_random)-logLik(mod_null)))
 lrtstat
 
 1 - pchisq(lrtstat,4)
-
 ```
+
 
 ```{r}
 
@@ -222,13 +220,18 @@ pred_data_random = predict(mod_random, test_data)
 
 actual_data_random = test_data$Deaths
 
-rmse(actual_data_random,pred_data_random)
+rmse_train = rmse(predict(mod_random, train_data), train_data$Deaths)
+RMSE_Random = rmse(actual_data_random,pred_data_random)
+
+print(paste("RMSE Train: ", rmse_train, " RMSE Test: ", rmse_test))
 ```
 
 # 3.4 Other Model (Optional)
 
 ```{r}
-#If you want to create other model (polynomial, lasso, etc.), please add your code here.
+# Deep Learning Neural Network
+
+# Note: Due to the limitations in R, this model was created in Python. The Python code can be viewd here: https://jovian.ai/nishantbalepur/stat-425-neural-network
 ```
 
 
@@ -236,7 +239,7 @@ rmse(actual_data_random,pred_data_random)
 
 1. Difficulty in interpretation (number of predictors)
 ```{r}
-#We substract 1 due to the intercept
+# We substract 1 due to the intercept
 length(coef(myfit))-1
 length(coef(myfit_1))-1
 length(coef(mod_random))  
@@ -250,12 +253,26 @@ coef(mod_random)
 
 2. RMSE
 ```{r}
-data.frame(
-  "RMSE of multiple linear model" = RMSE,
-  "RMSE of multiple linear model after transformation" = RMSE_1,
-  "RMSE of random effect model" = RMSE_random
-)
+library(ggplot2)
 
+rmse_lin_train = rmse(predict(myfit, train_data), train_data$Deaths)
+rmse_lin_test = rmse(predict(myfit, test_data), test_data$Deaths)
+
+rmse_tran_train = rmse(predict(myfit_1, train_data), train_data$Deaths)
+rmse_tran_test = rmse(predict(myfit_1, test_data), test_data$Deaths)
+
+rmse_rand_train = rmse(predict(mod_random, train_data), train_data$Deaths)
+rmse_rand_test = rmse(predict(mod_random, test_data), test_data$Deaths)
+
+rmse_nn_train = 0.19434809684753418
+rmse_nn_test = 0.147894486784935
+
+rmse_data = data.frame(y = c(rmse_lin_train, rmse_lin_test, rmse_tran_train, rmse_tran_test, rmse_rand_train, rmse_rand_test, rmse_nn_train, rmse_nn_test), x = c("Linear", "Linear", "Linear Transformed", "Linear Transformed", "Mixed Effects", "Mixed Effects", "Neural Network", "Neural Network"), dataset = rep(c("Train", "Test"), times = 4))
+
+rmse_data1 = data.frame(y = c(rmse_lin_train, rmse_lin_test, rmse_rand_train, rmse_rand_test, rmse_nn_train, rmse_nn_test), x = c("Linear", "Linear", "Mixed Effects", "Mixed Effects", "Neural Network", "Neural Network"), dataset = rep(c("Train", "Test"), times = 3))
+
+ggplot(rmse_data, aes(fill = dataset, y = y, x = x)) + geom_bar(position="dodge", stat="identity") + xlab("Model") + ylab("RMSE")
+ggplot(rmse_data1, aes(fill = dataset, y = y, x = x)) + geom_bar(position="dodge", stat="identity")+ xlab("Model") + ylab("RMSE")
+
+View(rmse_data)
 ```
-
-
