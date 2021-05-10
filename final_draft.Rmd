@@ -204,7 +204,7 @@ library(lme4)
 # 4. Conclusion
 - The model we choose:
 
-- Intepret the model:
+- Interpret the model:
 
 - How does the model help us to answer the main question:
 
