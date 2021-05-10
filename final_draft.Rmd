@@ -76,6 +76,64 @@ par(cex=0.65)
 corrplot(m,method="circle")
 ```
 
+# 2.3 Outlier Detection
+
+```{r}
+
+data = Fat_Supply_Quantity_Data
+data$Undernourished[data$Undernourished == "<2.5"] = "0"
+data$Undernourished = as.numeric(data$Undernourished)
+
+data = data[,!(colnames(data) %in% c("Country", "Unit (all except Population)"))]
+
+data[is.na(data)] = 0
+
+# studentized test
+lin = lm(Deaths ~ ., data = modified_data)
+jack = rstudent(lin) 
+sort(abs(jack), decreasing=TRUE)[1:5]
+
+qt(.05 / (2 * nrow(data)), nrow(data))
+```
+
+```{r}
+# halfnorm plot with cook's distance
+
+library(faraway)
+
+cook = cooks.distance(lin)
+max(cook)
+
+halfnorm(cook, labs=row.names(data), ylab="Cook's distances")
+```
+
+# 2.4 Interaction
+
+```{r}
+
+c = colnames(data)
+c[c == "Cereals - Excluding Beer"] = "Cereals...Excluding.Beer"
+colnames(data) = c
+
+# checking for interactions
+int = lm(Deaths ~ Cereals...Excluding.Beer + Undernourished + Cereals...Excluding.Beer*Undernourished,
+         data = data)
+summary(int)
+```
+
+# 2.5 Linearity
+
+```{r}
+g1 = lm(Deaths ~ Eggs, data = data)
+g2 = lm(Deaths ~ Eggs + I(Eggs^2), data = data)
+g3 = lm(Deaths ~ Eggs + I(Eggs^2) + I(Eggs^3), data = data)
+
+summary(g1)
+summary(g2)
+summary(g3)
+```
+
+
 ## Methodology
 
 # 3.1 Model Development
@@ -276,3 +334,4 @@ ggplot(rmse_data1, aes(fill = dataset, y = y, x = x)) + geom_bar(position="dodge
 
 View(rmse_data)
 ```
+
