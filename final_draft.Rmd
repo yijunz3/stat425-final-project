@@ -77,9 +77,7 @@ corrplot(m,method="circle")
 
 ## Methodology
 
-# 3.1 Variable Selection
-
-# 3.2 Model Development
+# 3.1 Model Development
 ```{r}
 #Simple linear regression model
 mod_linear <- lm(Deaths~.,data = modified_data)
@@ -165,6 +163,7 @@ plot(myfit,which=c(1,2))
 myfit_1 <- lm(log(Deaths)~.,data = modified_data[,c("Animal Products","Animal fats","Miscellaneous","Stimulants","Vegetal Products","Vegetable Oils","Obesity","Deaths")])
 summary(myfit_1)
 ```
+
 ```{r}
 #Do the assumption check again
 bptest(myfit_1)
@@ -175,7 +174,8 @@ plot(myfit_1,which=c(1,2))
 ```
 
 ```{r}
-#Todo: solve the non-normality problem
+
+#Since log(Deaths) is negative, we can't directly apply box-cox transformation. If anyone have any idea to correct the non-normality, feel free to write your code here.
 
 ```
 
@@ -186,26 +186,68 @@ plot(myfit_1,which=c(1,2))
 ```{r}
 # predicting with our test data
 pred_data = predict(myfit, test_data)
-
+pred_data_1 = predict(myfit_1, test_data)
 actual_data = test_data$Deaths
+actual_data_1 = test_data$Deaths
 
-err = (sum((actual_data - pred_data)^2))^0.5
-err
+#Since what we calculate are the log values
+RMSE = (mean(sum((exp(actual_data) - exp(pred_data))^2)))^0.5
+RMSE
+RMSE_1 = (mean(sum((exp(actual_data_1) - exp(pred_data_1))^2)))^0.5
+RMSE_1
 
 ```
 
 # 3.3 Other Models
 
 ```{r}
-#Since our model has both numerical and categorical variables, we would like to construct a mixed effect model.
+#Our model has both numerical and categorical variables, so we would like to construct a mixed effect model.
+#Assume all the factor variables are random effect (since they are representatives of populations in some countries)
+
 library(lme4)
+mod_mixed <- lmer(Deaths~1+`Animal Products`+`Animal fats`+`Miscellaneous`+`Cereals - Excluding Beer` + `Eggs`+ `Fish, Seafood`+`Fruits - Excluding Wine`+`Meat`+`Milk - Excluding Butter`+`Offals`+`Oilcrops`+`Pulses`+`Spices`+`Starchy Roots`+`Stimulants`+`Treenuts`+`Vegetal Products`+`Vegetable Oils`+`Vegetables`+`Obesity`+`Undernourished`+Population+(1|`Aquatic Products, Other`)+(1|`Alcoholic Beverages`)+(1|`Sugar Crops`)+(1|`Sugar & Sweeteners`),modified_data,REML=FALSE)
+
+mod_null <- lm(Deaths~1,modified_data)
+lrtstat = as.numeric(2*(logLik(mod_mixed)-logLik(mod_null)))
+lrtstat
+
+1 - pchisq(lrtstat,4)
+
 ```
 
-# 4. Conclusion
-- The model we choose:
+```{r}
+# predicting with our test data using the mixed effect model
+pred_data = predict(mod_mixed, test_data)
 
-- Interpret the model:
+actual_data = test_data$Deaths
 
-- How does the model help us to answer the main question:
+RMSE_mixed = (mean(sum((actual_data - pred_data))^2))^0.5
+RMSE_mixed
+```
 
-- Unsolved problems:
+# 3.4 Other Model (Optional)
+
+```{r}
+#If you want to create other model (polynomial, lasso, etc.), please add your code here.
+```
+
+
+# 3.5 Model Comparison
+
+1. Difficulty in interpretation (number of predictors)
+```{r}
+#We substract 1 due to the intercept
+length(coef(myfit))-1
+length(coef(myfit_1))-1
+length(coef(mod_mixed))-1  #Actually the number of predictor should be 26, I have no idea where the 3 comes from
+```
+
+```{r}
+coef(mod_mixed)
+```
+2. RMSE
+```{r}
+sort(c(RMSE,RMSE_1,RMSE_mixed))
+```
+
+
