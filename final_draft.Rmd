@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #Import the original data set
 library(readr)
 library(lmtest)
+library(Metrics)
 Fat_Supply_Quantity_Data <- read_csv("Fat_Supply_Quantity_Data.csv")
 str(Fat_Supply_Quantity_Data)
 ```
@@ -191,9 +192,9 @@ actual_data = test_data$Deaths
 actual_data_1 = test_data$Deaths
 
 #Since what we calculate are the log values
-RMSE = (mean(sum((exp(actual_data) - exp(pred_data))^2)))^0.5
+RMSE = rmse(actual_data,pred_data)
 RMSE
-RMSE_1 = (mean(sum((exp(actual_data_1) - exp(pred_data_1))^2)))^0.5
+RMSE_1 = rmse(actual_data_1,pred_data_1)
 RMSE_1
 
 ```
@@ -201,14 +202,13 @@ RMSE_1
 # 3.3 Other Models
 
 ```{r}
-#Our model has both numerical and categorical variables, so we would like to construct a mixed effect model.
-#Assume all the factor variables are random effect (since they are representatives of populations in some countries)
+#We assume all the factor variables are random effect (since they are representatives of populations in some countries), so we would like to build a random effect model.
 
 library(lme4)
-mod_mixed <- lmer(Deaths~1+`Animal Products`+`Animal fats`+`Miscellaneous`+`Cereals - Excluding Beer` + `Eggs`+ `Fish, Seafood`+`Fruits - Excluding Wine`+`Meat`+`Milk - Excluding Butter`+`Offals`+`Oilcrops`+`Pulses`+`Spices`+`Starchy Roots`+`Stimulants`+`Treenuts`+`Vegetal Products`+`Vegetable Oils`+`Vegetables`+`Obesity`+`Undernourished`+Population+(1|`Aquatic Products, Other`)+(1|`Alcoholic Beverages`)+(1|`Sugar Crops`)+(1|`Sugar & Sweeteners`),modified_data,REML=FALSE)
+mod_random <- lmer(Deaths~1+`Animal Products`+`Animal fats`+`Miscellaneous`+`Cereals - Excluding Beer` + `Eggs`+ `Fish, Seafood`+`Fruits - Excluding Wine`+`Meat`+`Milk - Excluding Butter`+`Offals`+`Oilcrops`+`Pulses`+`Spices`+`Starchy Roots`+`Stimulants`+`Treenuts`+`Vegetal Products`+`Vegetable Oils`+`Vegetables`+`Obesity`+`Undernourished`+Population+(1|`Aquatic Products, Other`)+(1|`Alcoholic Beverages`)+(1|`Sugar Crops`)+(1|`Sugar & Sweeteners`),modified_data,REML=FALSE)
 
 mod_null <- lm(Deaths~1,modified_data)
-lrtstat = as.numeric(2*(logLik(mod_mixed)-logLik(mod_null)))
+lrtstat = as.numeric(2*(logLik(mod_random)-logLik(mod_null)))
 lrtstat
 
 1 - pchisq(lrtstat,4)
@@ -216,13 +216,13 @@ lrtstat
 ```
 
 ```{r}
+
 # predicting with our test data using the mixed effect model
-pred_data = predict(mod_mixed, test_data)
+pred_data_random = predict(mod_random, test_data)
 
-actual_data = test_data$Deaths
+actual_data_random = test_data$Deaths
 
-RMSE_mixed = (mean(sum((actual_data - pred_data))^2))^0.5
-RMSE_mixed
+rmse(actual_data_random,pred_data_random)
 ```
 
 # 3.4 Other Model (Optional)
@@ -239,15 +239,23 @@ RMSE_mixed
 #We substract 1 due to the intercept
 length(coef(myfit))-1
 length(coef(myfit_1))-1
-length(coef(mod_mixed))-1  #Actually the number of predictor should be 26, I have no idea where the 3 comes from
+length(coef(mod_random))  
 ```
 
 ```{r}
-coef(mod_mixed)
+coef(myfit)
+coef(myfit_1)
+coef(mod_random)
 ```
+
 2. RMSE
 ```{r}
-sort(c(RMSE,RMSE_1,RMSE_mixed))
+data.frame(
+  "RMSE of multiple linear model" = RMSE,
+  "RMSE of multiple linear model after transformation" = RMSE_1,
+  "RMSE of random effect model" = RMSE_random
+)
+
 ```
 
 
