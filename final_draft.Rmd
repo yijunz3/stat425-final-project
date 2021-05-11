@@ -279,7 +279,7 @@ actual_data_random = test_data$Deaths
 rmse_train = rmse(predict(mod_random, train_data), train_data$Deaths)
 RMSE_Random = rmse(actual_data_random,pred_data_random)
 
-print(paste("RMSE Train: ", rmse_train, " RMSE Test: ", rmse_test))
+print(paste("RMSE Train: ", rmse_train, " RMSE Test: ", RMSE_Random))
 ```
 
 # 3.4 Other Model (Optional)
