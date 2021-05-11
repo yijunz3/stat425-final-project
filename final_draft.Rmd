@@ -1,6 +1,6 @@
 ---
-title: "stat425 final project"
-author: 
+title: "Stat425 Final Project"
+author: "Group YNX"
 output: html_document
 ---
 
@@ -294,6 +294,7 @@ print(paste("RMSE Train: ", rmse_train, " RMSE Test: ", rmse_test))
 # 3.5 Model Comparison
 
 1. Difficulty in interpretation (number of predictors)
+
 ```{r}
 # We substract 1 due to the intercept
 length(coef(myfit))-1
@@ -308,6 +309,7 @@ coef(mod_random)
 ```
 
 2. RMSE
+
 ```{r}
 library(ggplot2)
 
