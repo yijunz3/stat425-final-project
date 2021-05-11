@@ -230,10 +230,8 @@ par(mfrow=c(2,2))
 shapiro.test(resid(myfit_1))
 plot(myfit_1,which=c(1,2))
 
-```
+#Since log(Deaths) is negative, we can't directly apply box-cox transformation. 
 
-```{r}
-#Since log(Deaths) is negative, we can't directly apply box-cox transformation. If anyone have any idea to correct the non-normality, feel free to write your code here.
 ```
 
 
@@ -243,7 +241,7 @@ plot(myfit_1,which=c(1,2))
 ```{r}
 # predicting with our test data
 pred_data = predict(myfit, test_data)
-pred_data_1 = predict(myfit_1, test_data)
+pred_data_1 = exp(predict(myfit_1, test_data))
 actual_data = test_data$Deaths
 actual_data_1 = test_data$Deaths
 
@@ -316,8 +314,8 @@ library(ggplot2)
 rmse_lin_train = rmse(predict(myfit, train_data), train_data$Deaths)
 rmse_lin_test = rmse(predict(myfit, test_data), test_data$Deaths)
 
-rmse_tran_train = rmse(predict(myfit_1, train_data), train_data$Deaths)
-rmse_tran_test = rmse(predict(myfit_1, test_data), test_data$Deaths)
+rmse_tran_train = rmse(exp(predict(myfit_1, train_data)), train_data$Deaths)
+rmse_tran_test = rmse(exp(predict(myfit_1, test_data)), test_data$Deaths)
 
 rmse_rand_train = rmse(predict(mod_random, train_data), train_data$Deaths)
 rmse_rand_test = rmse(predict(mod_random, test_data), test_data$Deaths)
