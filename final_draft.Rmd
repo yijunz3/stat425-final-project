@@ -239,6 +239,8 @@ plot(myfit_1,which=c(1,2))
 # 3.2 Model Prediction
 
 ```{r}
+library(ggplot2)
+
 # predicting with our test data
 pred_data = predict(myfit, test_data)
 pred_data_1 = exp(predict(myfit_1, test_data))
@@ -251,6 +253,12 @@ RMSE
 RMSE_1 = rmse(actual_data_1,pred_data_1)
 RMSE_1
 
+pred_act_df = data.frame(x = 1:length(pred_data),
+                         y = c(pred_data_1, actual_data_1),
+                         type = rep(c("Prediction", "Actual"), each = length(pred_data)))
+
+
+ggplot(pred_act_df, aes(fill = type, y = y, x = x)) + geom_bar(position="dodge", stat="identity") + xlab("Data Point") + ylab("RMSE")
 ```
 
 # 3.3 Other Models
@@ -334,4 +342,3 @@ ggplot(rmse_data1, aes(fill = dataset, y = y, x = x)) + geom_bar(position="dodge
 
 View(rmse_data)
 ```
-
